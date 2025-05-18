@@ -1,9 +1,28 @@
 services:
-  # A Docker web service
+  # Backend FastAPI service
   - type: web
-    name: fastapi-example
+    name: unemployment-api
     runtime: python
     plan: free
     autoDeploy: false
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: TOGETHER_API_KEY
+        sync: false
+
+  # Frontend Streamlit service
+  - type: web
+    name: unemployment-frontend
+    runtime: python
+    plan: free
+    autoDeploy: false
+    buildCommand: |
+      pip install -r requirements.txt
+      pip install streamlit
+    startCommand: streamlit run frontend/app.py --server.port $PORT --server.address 0.0.0.0
+    envVars:
+      - key: TOGETHER_API_KEY
+        sync: false
