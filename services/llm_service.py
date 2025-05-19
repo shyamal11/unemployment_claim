@@ -11,16 +11,17 @@ class DeepSeekLLM:
     def __init__(self):
         together.api_key = settings.TOGETHER_API_KEY
     
-    def generate_explanation(self, decision: str, context: dict) -> str:
-        prompt = f"""You're an unemployment insurance assistant. Provide clear, concise explanations.\n\nExplain this decision: {decision}\nContext: {json.dumps(context)}\n\n</response>"""
-        response = together.Complete.create(
-            prompt=prompt,
-            model=settings.LLM_MODEL,
-            max_tokens=150,
-            temperature=0.3,
-            top_p=0.9,
-            top_k=50,
-            repetition_penalty=1.1,
-            stop=["</response>"]
-        )
-        return response['output']['choices'][0]['text'].strip()
+    def generate_explanation(self, prompt: str) -> str:
+        """Generate explanation using Together API"""
+        try:
+            print(prompt)
+            response = together.Complete.create(
+                prompt=prompt,
+                model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+                temperature=0.5,
+                max_tokens=300
+            )
+            return response['output']['choices'][0]['text'].strip()
+        except Exception as e:
+            print(f"LLM error: {str(e)}")
+            return "I apologize, but I'm having trouble generating a response right now. Please try again later."

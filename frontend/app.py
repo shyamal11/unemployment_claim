@@ -6,13 +6,22 @@ import time
 import re
 import sys
 import os
+from dotenv import load_dotenv
 
 # Add the project root directory to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import settings
+
+from services.fraud_detector import FraudDetector
+from services.eligibility import EligibilityChecker
+from services.llm_service import DeepSeekLLM
+from database import SessionLocal
+from database.models import Applicant, ClaimHistory
+
+# Load environment variables
+load_dotenv()
 
 # Initialize Together client
-together.api_key = settings.TOGETHER_API_KEY
+together.api_key = os.getenv("TOGETHER_API_KEY")
 
 def get_greeting():
     hour = datetime.now().hour
@@ -33,7 +42,8 @@ def generate_response(messages):
                 prompt=prompt,
                 model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
                 temperature=0.5,
-                max_tokens=300
+                max_tokens=150,
+                stop=["\n\n"] 
             )
             return response['output']['choices'][0]['text'].strip()
         except Exception as e:
@@ -47,27 +57,95 @@ def generate_response(messages):
     return "I'm currently overwhelmed with requests. Please try again in a minute."
 
 def analyze_claim(claim_data):
-    messages = [
-        {
-            "role": "system",
-            "content": """You are an unemployment claims analyzer. Respond ONLY in this format:
+    try:
+        # Convert earnings to float
+        if 'earnings' in claim_data:
+            claim_data['earnings'] = float(claim_data['earnings'])
+        if 'employment_months' in claim_data:
+            claim_data['employment_months'] = int(claim_data['employment_months'])
             
-**Status**: APPROVED/DENIED/FLAGGED  
-**Reason**: [1-2 sentence explanation]  
-**Next Steps**: [clear instructions]
-
-Rules:
-1. Never repeat yourself
-2. Use bold for section headers only
-3. Maximum 3 sentences total
-4. If unsure, say "Please contact a claims specialist\""""
-        },
-        {
-            "role": "user", 
-            "content": json.dumps(claim_data)
+        # Initialize services
+        fraud_detector = FraudDetector()
+        eligibility_checker = EligibilityChecker()
+        
+        # Perform checks
+        fraud_result = fraud_detector.analyze_claim(claim_data)
+        failed_rules = eligibility_checker.evaluate(claim_data)
+        
+        # Determine final status
+        status = "approved" if not failed_rules else "denied"
+        
+        # Generate explanation
+        llm = DeepSeekLLM()
+        explanation_context = {
+            "status": status,
+            "fraud_analysis": {
+                "score": fraud_result["score"],
+                "patterns": fraud_result["patterns"],
+                "hard_rule_violations": fraud_result["hard_rule_violations"],
+                "temporal_redflags": fraud_result["temporal_redflags"],
+                "is_anomaly": fraud_result["is_anomaly"],
+            },
+            "eligibility": {
+                "failed_rules": [r["message"] for r in failed_rules]
+            },
+            "user_data": {
+                "months": claim_data.get("employment_months"),
+                "earnings": claim_data.get("earnings"),
+                "employer": claim_data.get("employer"),
+                "reason": claim_data.get("separation_reason")
+            }
         }
-    ]
-    return generate_response(messages)
+        
+        base_prompt = """You're Joy, a friendly unemployment insurance assistant. 
+        Provide exactly ONE clear explanation for this decision:
+
+        Status: {status}
+        Context: {context}
+
+        Rules:
+        - Provide ONLY ONE explanation (2-3 sentences max)
+        - Do not repeat yourself
+        - Use simple, clear language
+        - Format as: "Explanation: [your text]"
+"""
+        
+        explanation = llm.generate_explanation(
+            base_prompt.format(status=status, context=json.dumps(explanation_context))
+        )
+        explanation = clean_response(explanation)  # Add this line
+                
+        # Format the response - only show status and explanation
+        formatted_response = f"""
+        **Status**: {status.upper()}
+
+        **Explanation**:  
+        {explanation.split('Explanation:')[-1].strip()}
+        """
+        return formatted_response
+    except Exception as e:
+        st.error(f"Error processing claim: {str(e)}")
+        return None
+
+
+def clean_response(text):
+    # Remove duplicate explanations
+    sentences = text.split('. ')
+    unique_sentences = []
+    seen = set()
+    
+    for sentence in sentences:
+        clean_sentence = sentence.strip()
+        if clean_sentence and clean_sentence not in seen:
+            seen.add(clean_sentence)
+            unique_sentences.append(clean_sentence)
+    
+    # Join back with periods and ensure proper ending
+    cleaned = '. '.join(unique_sentences)
+    if not cleaned.endswith('.'):
+        cleaned += '.'
+    return cleaned
+
 
 def detect_claim_intent(text):
     """Detects natural language requests to start claims"""
@@ -97,11 +175,11 @@ def main():
     
     # Define claim steps
     CLAIM_STEPS = [
-        {"prompt": "First, I'll need the last 4 digits of your SSN.", "field": "ssn", "validation": lambda x: len(x) == 4 and x.isdigit()},
+        {"prompt": "First, I'll need the last 4 digits of your SSN.", "field": "ssn_last4", "validation": lambda x: len(x) == 4 and x.isdigit()},
         {"prompt": "Which company did you last work for?", "field": "employer"},
-        {"prompt": "What was the reason for your separation?", "field": "reason"},
+        {"prompt": "What was the reason for your separation?", "field": "separation_reason"},
         {"prompt": "What were your total earnings in the last 6 months (USD)?", "field": "earnings", "validation": lambda x: x.replace('.','',1).isdigit()},
-        {"prompt": "How many months were you employed there?", "field": "months", "validation": lambda x: x.isdigit()}
+        {"prompt": "How many months were you employed there?", "field": "employment_months", "validation": lambda x: x.isdigit()}
     ]
 
     # Display chat history
@@ -174,8 +252,8 @@ def main():
                 # Enhance claim-related responses
                 if detect_claim_intent(prompt):
                     response += "\n\nYou can start by typing: 'start claim'"
-
-        # Add assistant response
+        
+        # Add response to chat
         if response:
             st.session_state.messages.append({"role": "assistant", "content": response})
             st.chat_message("assistant").write(response)

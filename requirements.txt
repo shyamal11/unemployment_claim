@@ -9,4 +9,6 @@ requests==2.31.0
 python-dotenv==1.0.1
 streamlit==1.31.1
 numpy==1.26.4
-together==0.2.5 
+together==0.2.5
+scikit-learn==1.4.0  # For anomaly detection
+regex==2023.12.25    # For pattern matching 

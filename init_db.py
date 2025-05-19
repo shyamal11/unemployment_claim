@@ -25,32 +25,32 @@ def init_db():
             {
                 "description": "Fake termination letter with forged signatures", 
                 "severity": 4,
-                "embedding": [random.uniform(0.7, 0.9) for _ in range(384)]  # High values for forgery
+                "embedding": [random.uniform(0.7, 0.9) for _ in range(768)]  # High values for forgery
             },
             {
                 "description": "Employer-employee collusion (shell companies)",
                 "severity": 5,
-                "embedding": [random.uniform(0.6, 0.8) for _ in range(384)]
+                "embedding": [random.uniform(0.6, 0.8) for _ in range(768)]
             },
             {
                 "description": "Earnings inflation (reporting fake overtime)",
                 "severity": 3,
-                "embedding": [random.uniform(0.5, 0.7) for _ in range(384)]
+                "embedding": [random.uniform(0.5, 0.7) for _ in range(768)]
             },
             {
                 "description": "Duplicate claims across state lines",
                 "severity": 4,
-                "embedding": [random.uniform(0.8, 1.0) for _ in range(384)]
+                "embedding": [random.uniform(0.8, 1.0) for _ in range(768)]
             },
             {
                 "description": "Fabricated harassment allegations",
                 "severity": 4,
-                "embedding": [random.uniform(0.6, 0.9) for _ in range(384)]
+                "embedding": [random.uniform(0.6, 0.9) for _ in range(768)]
             },
             {
                 "description": "Misclassified independent contractors",
                 "severity": 3,
-                "embedding": [random.uniform(0.4, 0.6) for _ in range(384)]
+                "embedding": [random.uniform(0.4, 0.6) for _ in range(768)]
             }
         ]
         
@@ -106,24 +106,24 @@ def init_db():
         # Approved Claims (Legitimate)
         legit_employers = ["Acme Corp", "Globex", "Initech", "Stark Industries", "Wayne Enterprises"]
         legit_reasons = [
-            "Laid off due to downsizing",
-            "Position eliminated after merger",
-            "Plant closure announced 2/15/2023",
-            "Department restructuring (confirmed by HR)",
-            "Reduction in force with severance package"
+            "Department closure after corporate restructuring",
+            "Position eliminated due to automation",
+            "Company downsizing after merger",
+            "End of contract (non-renewal)",
+            "Business relocation"
         ]
         
-        # Denied Claims (Fraudulent)
+        # Fraudulent Claims
         fraud_employers = ["Fake Corp", "Fraud LLC", "Shell Co", "Quick Temp", "Ghost Employer"]
         fraud_reasons = [
-            "Terminated without cause (no documentation)",
-            "Constructive dismissal - refused to provide details",
-            "Company bankrupt (no public records found)",
-            "Harassment by manager John Doe (unreported)",
-            "Fired after reporting safety issues (unverified)"
+            "Terminated after 1 month",
+            "Seasonal work ended",
+            "Contract dispute",
+            "Unpaid overtime",
+            "Hostile work environment"
         ]
         
-        # Generate 30 sample claims (10 fraudulent, 20 legitimate)
+        # Generate sample claims
         for i in range(1, 31):
             if i <= 10:  # Fraudulent claims
                 employer = random.choice(fraud_employers)
@@ -144,8 +144,8 @@ def init_db():
             
             # Create embedding
             embedding = (
-                [random.uniform(0.7, 0.9) for _ in range(384)] if status == "denied"
-                else [random.uniform(0.1, 0.3) for _ in range(384)]
+                [random.uniform(0.7, 0.9) for _ in range(768)] if status == "denied"
+                else [random.uniform(0.1, 0.3) for _ in range(768)]
             )
             
             # Create Applicant record
@@ -169,7 +169,7 @@ def init_db():
                         ssn_last4=ssn,
                         employer=f"Previous Employer {j}",
                         claim_date=datetime.now() - timedelta(days=random.randint(30, 300)),
-                        embedding=[random.uniform(0.6, 0.8) for _ in range(384)]
+                        embedding=[random.uniform(0.6, 0.8) for _ in range(768)]
                     ))
         
         # Special test cases
@@ -214,7 +214,7 @@ def init_db():
                         ssn_last4="3574",
                         employer=f"Temp Employer {j}",
                         claim_date=datetime.now() - timedelta(days=30*j),
-                        embedding=[random.uniform(0.6, 0.8) for _ in range(384)]
+                        embedding=[random.uniform(0.6, 0.8) for _ in range(768)]
                     ))
         
         db.commit()

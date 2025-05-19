@@ -7,7 +7,7 @@ class TogetherEmbedding:
     def get_embedding(self, text: str) -> List[float]:
         try:
             response = requests.post(
-                "https://api.together.xyz/api/v1/embeddings",
+                "https://api.together.xyz/v1/embeddings",
                 headers={"Authorization": f"Bearer {settings.TOGETHER_API_KEY}"},
                 json={
                     "model": settings.EMBEDDING_MODEL,
@@ -23,11 +23,10 @@ class TogetherEmbedding:
 
     def get_contextual_embedding(self, claim_data: Dict) -> List[float]:
         """Generate embedding from MULTIPLE claim aspects"""
-        # Note: _get_industry_avg is not implemented, using raw earnings value
         context = f"""
-Employer: {claim_data['employer']}
-Reason: {claim_data['separation_reason']}
-Earnings: {claim_data['earnings']}
-Employment Duration: {claim_data['employment_months']} months
+Employer: {claim_data.get('employer', '')}
+Reason: {claim_data.get('separation_reason', '')}
+Earnings: {claim_data.get('earnings', '')}
+Employment Duration: {claim_data.get('employment_months', '')} months
 """
         return self.get_embedding(context) 

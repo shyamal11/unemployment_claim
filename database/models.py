@@ -10,7 +10,7 @@ class Applicant(Base):
     ssn_last4 = Column(String(4), index=True)
     employer = Column(String(100))
     separation_reason = Column(String)
-    separation_embedding = Column(Vector(384))
+    separation_embedding = Column(Vector(768))
     earnings = Column(Float)
     employment_months = Column(Integer)
     status = Column(String(20))
@@ -23,7 +23,7 @@ class FraudPattern(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     description = Column(String(255), index=True)
-    embedding = Column(Vector(384))
+    embedding = Column(Vector(768))
     severity = Column(Integer)
 
 class EligibilityRule(Base):
@@ -40,4 +40,4 @@ class ClaimHistory(Base):
     ssn_last4 = Column(String(4), index=True)
     claim_date = Column(DateTime)
     employer = Column(String(100))
-    embedding = Column(Vector(384)) 
+    embedding = Column(Vector(768)) 

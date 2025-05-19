@@ -1,27 +1,61 @@
-# Deploy FastAPI on Render
+# Unemployment Claims Assistant
 
-Use this repo as a template to deploy a Python [FastAPI](https://fastapi.tiangolo.com) service on Render.
+An AI-powered application that helps process and evaluate unemployment claims using fraud detection and eligibility checking.
 
-See https://render.com/docs/deploy-fastapi or follow the steps below:
+## Features
 
-## Manual Steps
+- Natural language interface for claim submission
+- AI-powered fraud detection
+- Eligibility rule checking
+- User-friendly explanations of decisions
 
-1. You may use this repository directly or [create your own repository from this template](https://github.com/render-examples/fastapi/generate) if you'd like to customize the code.
-2. Create a new Web Service on Render.
-3. Specify the URL to your new repository or this repository.
-4. Render will automatically detect that you are deploying a Python service and use `pip` to download the dependencies.
-5. Specify the following as the Start Command.
+## Deployment
 
-    ```shell
-    uvicorn main:app --host 0.0.0.0 --port $PORT
-    ```
+This application is deployed on Streamlit Cloud. You can access it at: [Your Streamlit URL]
 
-6. Click Create Web Service.
+## Local Development
 
-Or simply click:
+1. Clone the repository
+2. Create a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Set up environment variables in `.env`:
+   ```
+   TOGETHER_API_KEY=your_api_key_here
+   ```
+5. Initialize the database:
+   ```bash
+   python init_db.py
+   ```
+6. Run the application:
+   ```bash
+   streamlit run frontend/app.py
+   ```
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/render-examples/fastapi)
+## Environment Variables
 
-## Thanks
+- `TOGETHER_API_KEY`: Your Together AI API key for embeddings and LLM
 
-Thanks to [Harish](https://harishgarg.com) for the [inspiration to create a FastAPI quickstart for Render](https://twitter.com/harishkgarg/status/1435084018677010434) and for some sample code!
+## Project Structure
+
+```
+├── frontend/
+│   └── app.py              # Streamlit application
+├── services/
+│   ├── fraud_detector.py   # Fraud detection logic
+│   ├── eligibility.py      # Eligibility checking
+│   ├── embedding_service.py # Embedding generation
+│   └── llm_service.py      # LLM integration
+├── database/
+│   ├── models.py           # Database models
+│   └── __init__.py         # Database configuration
+├── config.py               # Application configuration
+├── init_db.py             # Database initialization
+└── requirements.txt       # Project dependencies
+```
