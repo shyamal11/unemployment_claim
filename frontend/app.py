@@ -1,13 +1,18 @@
 import streamlit as st
-from together import Together
+import together
 from datetime import datetime
 import json
 import time
 import re
+import sys
+import os
+
+# Add the project root directory to Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import settings
 
-# Initialize with free model
-client = Together(api_key=settings.TOGETHER_API_KEY)
+# Initialize Together client
+together.api_key = settings.TOGETHER_API_KEY
 
 def get_greeting():
     hour = datetime.now().hour
@@ -18,15 +23,19 @@ def get_greeting():
 def generate_response(messages):
     """Handle free tier rate limits with retries"""
     max_retries = 3
+    # Convert messages to a prompt string
+    prompt = ""
+    for m in messages:
+        prompt += f"{m['role']}: {m['content']}\n"
     for attempt in range(max_retries):
         try:
-            response = client.chat.completions.create(
+            response = together.Complete.create(
+                prompt=prompt,
                 model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-                messages=messages,
-                temperature=0.3,
+                temperature=0.5,
                 max_tokens=300
             )
-            return response.choices[0].message.content
+            return response['output']['choices'][0]['text'].strip()
         except Exception as e:
             if "rate limit" in str(e).lower():
                 wait_time = (2 ** attempt) + 0.5
@@ -41,10 +50,17 @@ def analyze_claim(claim_data):
     messages = [
         {
             "role": "system",
-            "content": """Analyze unemployment claims. Respond EXACTLY in this format:
-            **Status**: APPROVED/DENIED/FLAGGED
-            **Reason**: 1-2 sentence explanation 
-            **Next Steps**: Clear instructions"""
+            "content": """You are an unemployment claims analyzer. Respond ONLY in this format:
+            
+**Status**: APPROVED/DENIED/FLAGGED  
+**Reason**: [1-2 sentence explanation]  
+**Next Steps**: [clear instructions]
+
+Rules:
+1. Never repeat yourself
+2. Use bold for section headers only
+3. Maximum 3 sentences total
+4. If unsure, say "Please contact a claims specialist\""""
         },
         {
             "role": "user", 
