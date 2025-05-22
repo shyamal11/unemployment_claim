@@ -1,16 +1,35 @@
-import os
-import subprocess
+from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+import streamlit.web.bootstrap as bootstrap
 import sys
+import os
+import threading
+import time
+import subprocess
+from contextlib import asynccontextmanager
 
-def start_streamlit():
-    cmd = [
+app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Start Streamlit in a separate process
+    streamlit_process = subprocess.Popen([
         "streamlit", "run",
         "frontend/app.py",
-        "--server.port=" + os.environ.get("PORT", "8501"),
+        "--server.port=8501",
         "--server.address=0.0.0.0",
         "--server.headless=true"
-    ]
-    subprocess.run(cmd)
+    ])
+    yield
+    # Cleanup
+    streamlit_process.terminate()
 
-if __name__ == "__main__":
-    start_streamlit() 
+app = FastAPI(lifespan=lifespan)
+
+@app.get("/")
+async def root():
+    return {"message": "Streamlit app is running"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"} 

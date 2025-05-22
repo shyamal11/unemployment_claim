@@ -4,11 +4,11 @@ services:
     env: python
     runtime: python3.11
     buildCommand: pip install -r requirements.txt
-    startCommand: streamlit run frontend/app.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: TOGETHER_API_KEY
         sync: false
       - key: DATABASE_URL
         sync: false
-    healthCheckPath: /
+    healthCheckPath: /health
     autoDeploy: true 
