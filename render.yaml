@@ -2,8 +2,9 @@ services:
   - type: web
     name: unemployment-claims
     env: python
+    runtime: python3.11
     buildCommand: pip install -r requirements.txt
-    startCommand: streamlit run frontend/app.py --server.port=$PORT --server.address=0.0.0.0
+    startCommand: streamlit run frontend/app.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true
     envVars:
       - key: TOGETHER_API_KEY
         sync: false
