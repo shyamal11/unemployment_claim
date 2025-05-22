@@ -1,6 +1,6 @@
 # Unemployment Claims Assistant
 
-An AI-powered application that helps process and evaluate unemployment claims using fraud detection and eligibility checking.
+An AI-powered application that helps users file and manage unemployment claims.
 
 ## Features
 
@@ -9,13 +9,65 @@ An AI-powered application that helps process and evaluate unemployment claims us
 - Eligibility rule checking
 - User-friendly explanations of decisions
 
-## Deployment
+## Deployment Instructions
 
-This application is deployed on Streamlit Cloud. You can access it at: [Your Streamlit URL]
+### Option 1: Streamlit Community Cloud (Recommended)
+
+1. Create a GitHub repository and push your code:
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin <your-github-repo-url>
+git push -u origin main
+```
+
+2. Go to [share.streamlit.io](https://share.streamlit.io/)
+3. Sign in with your GitHub account
+4. Click "New app"
+5. Select your repository, branch, and main file (frontend/app.py)
+6. Add your environment variables:
+   - TOGETHER_API_KEY
+   - DATABASE_URL (if using a database)
+
+### Option 2: Docker Deployment
+
+1. Build the Docker image:
+```bash
+docker build -t unemployment-claims .
+```
+
+2. Run the container:
+```bash
+docker run -p 8501:8501 -e TOGETHER_API_KEY=your_key unemployment-claims
+```
+
+## Environment Variables
+
+Create a `.env` file with the following variables:
+```
+TOGETHER_API_KEY=your_together_api_key
+DATABASE_URL=your_database_url
+```
 
 ## Local Development
 
-See the **Getting Started** section below for full setup instructions.
+1. Create a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+3. Run the application:
+```bash
+cd frontend
+streamlit run app.py
+```
 
 ## Project Structure
 

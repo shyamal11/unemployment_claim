@@ -21,7 +21,11 @@ class DeepSeekLLM:
                 temperature=0.5,
                 max_tokens=300
             )
-            return response['output']['choices'][0]['text'].strip()
+            if 'choices' in response and response['choices']:
+                return response['choices'][0]['text'].strip()
+            else:
+                print(f"LLM response missing 'choices' key: {response}")
+                return "I apologize, but I'm having trouble generating a response right now. Please try again later."
         except Exception as e:
             print(f"LLM error: {str(e)}")
             return "I apologize, but I'm having trouble generating a response right now. Please try again later."

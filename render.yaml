@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: unemployment-claims
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: cd frontend && streamlit run app.py --server.port=$PORT --server.address=0.0.0.0
+    envVars:
+      - key: TOGETHER_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+    healthCheckPath: /
+    autoDeploy: true 
