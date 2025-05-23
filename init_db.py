@@ -1,11 +1,12 @@
-from database import Base, engine
+from database import Base, engine, init_db
 from database.models import FraudPattern, EligibilityRule, Applicant, ClaimHistory
 from database import SessionLocal
 import numpy as np
 from datetime import datetime, timedelta
 import random
+import json
 
-def init_db():
+def populate_db():
     # Drop all existing tables
     print("Dropping all tables...")
     Base.metadata.drop_all(bind=engine)
@@ -13,7 +14,7 @@ def init_db():
 
     # Create tables
     print("Creating all tables...")
-    Base.metadata.create_all(bind=engine)
+    init_db()
     print("Tables created.")
     
     with SessionLocal() as db:
@@ -169,7 +170,7 @@ def init_db():
                         ssn_last4=ssn,
                         employer=f"Previous Employer {j}",
                         claim_date=datetime.now() - timedelta(days=random.randint(30, 300)),
-                        embedding=[random.uniform(0.6, 0.8) for _ in range(768)]
+                        embedding=json.dumps([random.uniform(0.6, 0.8) for _ in range(768)])
                     ))
         
         # Special test cases
@@ -214,11 +215,11 @@ def init_db():
                         ssn_last4="3574",
                         employer=f"Temp Employer {j}",
                         claim_date=datetime.now() - timedelta(days=30*j),
-                        embedding=[random.uniform(0.6, 0.8) for _ in range(768)]
+                        embedding=json.dumps([random.uniform(0.6, 0.8) for _ in range(768)])
                     ))
         
         db.commit()
         print("Database initialized with enhanced sample data!")
 
 if __name__ == "__main__":
-    init_db()
+    populate_db()

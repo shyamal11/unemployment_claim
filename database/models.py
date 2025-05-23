@@ -1,6 +1,5 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, func
+from sqlalchemy import Column, Integer, String, Float, DateTime, func, JSON
 from sqlalchemy.orm import relationship
-from pgvector.sqlalchemy import Vector
 from database import Base
 
 class Applicant(Base):
@@ -10,7 +9,7 @@ class Applicant(Base):
     ssn_last4 = Column(String(4), index=True)
     employer = Column(String(100))
     separation_reason = Column(String)
-    separation_embedding = Column(Vector(768))
+    separation_embedding = Column(JSON)
     earnings = Column(Float)
     employment_months = Column(Integer)
     status = Column(String(20))
@@ -23,7 +22,7 @@ class FraudPattern(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     description = Column(String(255), index=True)
-    embedding = Column(Vector(768))
+    embedding = Column(JSON)
     severity = Column(Integer)
 
 class EligibilityRule(Base):
@@ -40,4 +39,4 @@ class ClaimHistory(Base):
     ssn_last4 = Column(String(4), index=True)
     claim_date = Column(DateTime)
     employer = Column(String(100))
-    embedding = Column(Vector(768)) 
+    embedding = Column(String) 

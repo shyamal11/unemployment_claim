@@ -4,6 +4,7 @@ from database.models import FraudPattern, ClaimHistory
 from typing import Dict, Any, List
 import json
 from datetime import datetime, timedelta
+import numpy as np
 # Import for anomaly detector will be added once the file is created
 # from services.anomaly_detector import EarningsAnomalyDetector
 
@@ -61,32 +62,47 @@ class FraudDetector:
         
         return round(score, 2)
 
+    def cosine_similarity(self, vec1: List[float], vec2: List[float]) -> float:
+        """Calculate cosine similarity between two vectors"""
+        vec1 = np.array(vec1)
+        vec2 = np.array(vec2)
+        return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
+
     def analyze_claim(self, claim_data: Dict) -> Dict[str, Any]:
         """Analyze claim data using a hybrid detection approach"""
-        # 1. Multi-aspect embedding
+        # 1. Get embedding
         embedding = self.embedding_model.get_contextual_embedding(claim_data)
         
         with SessionLocal() as db:
-            # Store claim history (simplified - ideally done after final decision)
+            # Store claim history
             db.add(ClaimHistory(
                 ssn_last4=claim_data['ssn_last4'],
                 claim_date=datetime.now(),
                 employer=claim_data['employer'],
-                embedding=embedding
+                embedding=json.dumps(embedding)  # Properly serialize embedding
             ))
             db.commit()
 
-            # 2. Parallel checks
-            similar_patterns = db.query(FraudPattern).order_by(
-                FraudPattern.embedding.l2_distance(embedding)
-            ).limit(3).all()
+            # 2. Find similar patterns using cosine similarity
+            patterns = db.query(FraudPattern).all()
+            similar_patterns = []
+            for pattern in patterns:
+                if isinstance(pattern.embedding, str):
+                    pattern_embedding = json.loads(pattern.embedding)
+                else:
+                    pattern_embedding = pattern.embedding
+                similarity = self.cosine_similarity(embedding, pattern_embedding)
+                if similarity > 0.8:  # Threshold for similarity
+                    similar_patterns.append(pattern)
+
+            # 3. Other checks
             hard_rules = self.apply_hard_rules(claim_data)
             temporal_redflags = self.check_temporal_patterns(claim_data['ssn_last4'])
             # Anomaly detection will be called here once implemented
             # is_anomaly = self.anomaly_detector.check(claim_data)
             is_anomaly = False # Placeholder until anomaly detector is added
         
-        # 3. Weighted decision
+        # 4. Calculate final score
         score = self.calculate_score(similar_patterns, hard_rules, temporal_redflags, is_anomaly)
 
         return {

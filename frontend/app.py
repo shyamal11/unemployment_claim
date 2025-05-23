@@ -45,7 +45,11 @@ def generate_response(messages):
                 max_tokens=150,
                 stop=["\n\n"] 
             )
-            return response['output']['choices'][0]['text'].strip()
+            if 'choices' in response and response['choices']:
+                return response['choices'][0]['text'].strip()
+            else:
+                st.error(f"LLM response missing 'choices' key: {response}")
+                return "I apologize, but I'm having trouble generating a response right now. Please try again later."
         except Exception as e:
             if "rate limit" in str(e).lower():
                 wait_time = (2 ** attempt) + 0.5
