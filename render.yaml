@@ -1,26 +1,15 @@
 services:
   - type: web
-    name: unemployment-claims
+    name: unemployment-claims-backend
     env: python
-    runtime: python3.11
-    buildCommand: |
-      pip install -r requirements.txt
-      export PYTHONPATH=$PYTHONPATH:$(pwd)
-    startCommand: |
-      export PYTHONPATH=$PYTHONPATH:$(pwd)
-      export STREAMLIT_SERVER_HEADLESS=true
-      export STREAMLIT_SERVER_ENABLE_WEBSOCKET_COMPRESSION=false
-      uvicorn main:app --host 0.0.0.0 --port $PORT --ws-ping-interval 20 --ws-ping-timeout 20
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: TOGETHER_API_KEY
+      - key: OPENAI_API_KEY
         sync: false
-      - key: DATABASE_URL
-        sync: false
-      - key: PYTHONPATH
-        value: ${PYTHONPATH}:${PWD}
-      - key: STREAMLIT_SERVER_HEADLESS
-        value: "true"
-      - key: STREAMLIT_SERVER_ENABLE_WEBSOCKET_COMPRESSION
-        value: "false"
-    healthCheckPath: /health
-    autoDeploy: true 
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 30 
