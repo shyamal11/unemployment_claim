@@ -8,6 +8,8 @@ services:
       export PYTHONPATH=$PYTHONPATH:$(pwd)
     startCommand: |
       export PYTHONPATH=$PYTHONPATH:$(pwd)
+      export STREAMLIT_SERVER_HEADLESS=true
+      export STREAMLIT_SERVER_ENABLE_WEBSOCKET_COMPRESSION=false
       uvicorn main:app --host 0.0.0.0 --port $PORT --ws-ping-interval 20 --ws-ping-timeout 20
     envVars:
       - key: TOGETHER_API_KEY
@@ -16,5 +18,9 @@ services:
         sync: false
       - key: PYTHONPATH
         value: ${PYTHONPATH}:${PWD}
+      - key: STREAMLIT_SERVER_HEADLESS
+        value: "true"
+      - key: STREAMLIT_SERVER_ENABLE_WEBSOCKET_COMPRESSION
+        value: "false"
     healthCheckPath: /health
     autoDeploy: true 

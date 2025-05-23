@@ -2,13 +2,15 @@ import os
 import sys
 from pathlib import Path
 import requests
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, WebSocket
 from fastapi.responses import HTMLResponse, StreamingResponse
 import streamlit.web.bootstrap as bootstrap
 import threading
 import time
 import subprocess
 from contextlib import asynccontextmanager
+import asyncio
+import websockets
 
 # Add the project root to Python path
 project_root = Path(__file__).parent
@@ -43,6 +45,23 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+@app.websocket("/_stcore/stream")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        async with websockets.connect("ws://localhost:8501/_stcore/stream") as streamlit_ws:
+            while True:
+                try:
+                    # Forward messages from Streamlit to client
+                    streamlit_message = await streamlit_ws.recv()
+                    await websocket.send_text(streamlit_message)
+                except websockets.exceptions.ConnectionClosed:
+                    break
+    except Exception as e:
+        print(f"WebSocket error: {str(e)}")
+    finally:
+        await websocket.close()
 
 @app.get("/{path:path}")
 async def proxy_streamlit(path: str, request: Request):

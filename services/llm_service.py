@@ -19,7 +19,7 @@ class DeepSeekLLM:
                 prompt=prompt,
                 model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
                 temperature=0.5,
-                max_tokens=300
+                max_tokens=150
             )
             if 'choices' in response and response['choices']:
                 return response['choices'][0]['text'].strip()
