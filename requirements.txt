@@ -1,5 +1,5 @@
 streamlit==1.32.0
-together==0.2.5
+together-ai==0.2.5
 python-dotenv==1.0.1
 SQLAlchemy==2.0.28
 pandas==2.2.1
