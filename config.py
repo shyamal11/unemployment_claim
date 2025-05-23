@@ -1,14 +1,14 @@
-from pydantic_settings import BaseSettings
 import os
+from dotenv import load_dotenv
 
-class Settings(BaseSettings):
-    DATABASE_URL: str = os.getenv("DATABASE_URL")
-    TOGETHER_API_KEY: str = os.getenv("TOGETHER_API_KEY")
-    EMBEDDING_MODEL: str = "togethercomputer/m2-bert-80M-8k-retrieval"
-    LLM_MODEL: str = "deepseek-ai/DeepSeek-R1"
-    backend_api_url: str = os.getenv("BACKEND_API_URL", "http://localhost:8000")
-    
-    class Config:
-        env_file = ".env"
+# Load environment variables
+load_dotenv()
+
+class Settings:
+    def __init__(self):
+        self.DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./unemployment.db")
+        self.TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
+        self.EMBEDDING_MODEL = "togethercomputer/m2-bert-80M-8k-retrieval"
+        self.LLM_MODEL = "deepseek-ai/DeepSeek-R1"
 
 settings = Settings() 
