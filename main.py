@@ -1,8 +1,14 @@
+import os
+import sys
+from pathlib import Path
+
+# Add the project root to Python path
+project_root = Path(__file__).parent
+sys.path.append(str(project_root))
+
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 import streamlit.web.bootstrap as bootstrap
-import sys
-import os
 import threading
 import time
 import subprocess
@@ -15,7 +21,7 @@ async def lifespan(app: FastAPI):
     # Start Streamlit in a separate process
     streamlit_process = subprocess.Popen([
         "streamlit", "run",
-        "frontend/app.py",
+        str(project_root / "frontend" / "app.py"),
         "--server.port=8501",
         "--server.address=0.0.0.0",
         "--server.headless=true"
